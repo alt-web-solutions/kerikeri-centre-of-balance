@@ -1280,6 +1280,12 @@ body.page-exit .page-transition-overlay {
 
 /* Tablet */
 @media (max-width: 980px) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
   .nav-toggle {
     display: block;
   }

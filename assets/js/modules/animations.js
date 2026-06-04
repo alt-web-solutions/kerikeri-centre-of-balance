@@ -1,21 +1,51 @@
 export const initRevealAnimations = () => {
-  const revealEls = document.querySelectorAll(".reveal");
+  const desktopQuery = window.matchMedia("(min-width: 981px)");
+  let observer;
 
-  if (!('IntersectionObserver' in window)) {
-    revealEls.forEach((el) => el.classList.add("visible"));
-    return;
-  }
+  const syncRevealState = () => {
+    observer?.disconnect();
+    observer = undefined;
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("visible");
-        observer.unobserve(entry.target);
+    const revealEls = document.querySelectorAll(".reveal, [data-reveal-disabled-mobile]");
+
+    if (!desktopQuery.matches) {
+      revealEls.forEach((el) => {
+        if (el.classList.contains("reveal")) {
+          el.classList.remove("reveal");
+          el.dataset.revealDisabledMobile = "true";
+        }
+      });
+      return;
+    }
+
+    revealEls.forEach((el) => {
+      if (el.dataset.revealDisabledMobile === "true") {
+        el.classList.add("reveal");
+        delete el.dataset.revealDisabledMobile;
       }
     });
-  }, { threshold: 0.14 });
 
-  revealEls.forEach((el) => observer.observe(el));
+    const activeRevealEls = document.querySelectorAll(".reveal:not(.visible)");
+
+    if (!("IntersectionObserver" in window)) {
+      activeRevealEls.forEach((el) => el.classList.add("visible"));
+      return;
+    }
+
+    observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+
+    activeRevealEls.forEach((el) => observer.observe(el));
+  };
+
+  syncRevealState();
+  desktopQuery.addEventListener("change", syncRevealState);
 };
 
 export const initPageTransitions = () => {
